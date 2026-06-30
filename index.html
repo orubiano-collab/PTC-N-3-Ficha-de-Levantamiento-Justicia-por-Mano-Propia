@@ -920,10 +920,60 @@ function guardarBorrador() {
   alert('Borrador guardado localmente. Recuerde completar y enviar la ficha para que quede registrada en el sistema OSCC.');
 }
 
+/* ═══════════════════════════════════════════════════
+   CONEXIÓN A BASE DE DATOS (Google Sheets vía Apps Script)
+   ═══════════════════════════════════════════════════ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykcqdIWNq0jor_Y0xbSDvDaO_HmxJBkbEqlmQwxgAcjdtZ-_YVB-tm6L1wSJTvSKLH/exec'; // URL única compartida por los 8 formularios + 8 tableros
+const PP_NUMERO  = 3;                            // Identifica la hoja Respuestas_PP3 en el backend
+
+function recolectarDatosFormulario() {
+  const obj = {};
+
+  // 1) Campos seleccionables por NAME (radios de presencia y de nivel)
+  const names = [...new Set(Array.from(document.querySelectorAll('[name]'))
+    .map(el => el.name).filter(n => n && n !== 'viewport'))];
+
+  names.forEach(n => {
+    const checked = document.querySelector(`[name="${n}"]:checked`);
+    if (checked) {
+      const label = checked.closest('label');
+      obj[n.replace(/-/g, '_')] = (label ? label.textContent.trim() : checked.value) || 'sí';
+    }
+  });
+
+  // 2) Campos de texto / fecha / hora / GPS identificados por ID
+  ['fecha', 'localidad', 'barrio', 'resp', 'codigo', 'desc-sector',
+   'conclusion', 'hora-ini', 'hora-fin', 'lat', 'lng', 'firma'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) obj[id.replace(/-/g, '_')] = el.value;
+  });
+
+  obj.pp = PP_NUMERO;
+  obj.timestamp_envio = new Date().toISOString();
+  return obj;
+}
+
+function enviarABaseDeDatos(payload) {
+  // text/plain evita el preflight CORS de Apps Script (truco estándar)
+  return fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+}
+
 function enviar() {
   if (!validar(4)) return;
   document.getElementById('s4').classList.remove('vis');
-  const code = document.getElementById('codigo').value || 'PP3-RBL-' + Date.now().toString().slice(-6);
+  const code = document.getElementById('codigo').value || 'PP3-REB-' + Date.now().toString(36).toUpperCase();
+  document.getElementById('codigo').value = code;
+
+  const payload = recolectarDatosFormulario();
+  payload.codigo_ficha = code;
+  enviarABaseDeDatos(payload)
+    .then(() => console.log('✓ Ficha PP3 sincronizada con la base de datos'))
+    .catch(err => console.warn('⚠ No se pudo sincronizar con la base de datos (se guarda solo el código local):', err));
+
   document.getElementById('success-code').textContent = code;
   document.getElementById('success').classList.add('vis');
   window.scrollTo({ top: 0, behavior: 'smooth' });
