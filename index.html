@@ -774,7 +774,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="success-ico">⚖️</div>
     <h2>Ficha registrada exitosamente</h2>
     <p>El levantamiento del Problema Público N° 3 ha sido enviado al Centro de Control de Información Territorial del OSCC. El equipo técnico procesará las alertas identificadas en las próximas horas.</p>
-    <div class="success-code" id="success-code">PP3-RBL-0001</div>
+    <div class="success-code" id="success-code">PTC3-RBL-0001</div>
     <p style="font-size:.82em;color:var(--ink3);margin-bottom:20px;">Guarde este código como referencia del levantamiento. Toda la información es confidencial y de manejo institucional exclusivo.</p>
     <button class="btn-nuevo" onclick="nuevaFicha()">+ Nueva ficha</button>
   </div>
@@ -783,7 +783,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
 <div class="footer">
   <div>
-    <b>GESEG</b> · Ficha de Levantamiento PP3 · OSCC Barranquilla 2026<br>
+    <b>GESEG</b> · Ficha de Levantamiento PTC3 · OSCC Barranquilla 2026<br>
     <span class="fcred">
       Autoría: Omar Rubiano Castro · CONVIVE 360 · Alcaldía Local de Barranquilla<br>
       Fuente: SIEDCO-Policía Nacional · Área Metropolitana de Barranquilla
@@ -846,7 +846,7 @@ function generarCodigo() {
   const f = (document.getElementById('fecha').value || '').replace(/-/g,'');
   if (loc && f) {
     const n = String(Math.floor(Math.random() * 900) + 100);
-    document.getElementById('codigo').value = 'PP3-' + loc + '-' + f + '-' + n;
+    document.getElementById('codigo').value = 'PTC3-' + loc + '-' + f + '-' + n;
   }
 }
 document.getElementById('fecha').addEventListener('change', generarCodigo);
@@ -965,13 +965,13 @@ function enviarABaseDeDatos(payload) {
 function enviar() {
   if (!validar(4)) return;
   document.getElementById('s4').classList.remove('vis');
-  const code = document.getElementById('codigo').value || 'PP3-REB-' + Date.now().toString(36).toUpperCase();
+  const code = document.getElementById('codigo').value || 'PTC3-REB-' + Date.now().toString(36).toUpperCase();
   document.getElementById('codigo').value = code;
 
   const payload = recolectarDatosFormulario();
   payload.codigo_ficha = code;
   enviarABaseDeDatos(payload)
-    .then(() => console.log('✓ Ficha PP3 sincronizada con la base de datos'))
+    .then(() => console.log('✓ Ficha PTC3 sincronizada con la base de datos'))
     .catch(err => console.warn('⚠ No se pudo sincronizar con la base de datos (se guarda solo el código local):', err));
 
   document.getElementById('success-code').textContent = code;
