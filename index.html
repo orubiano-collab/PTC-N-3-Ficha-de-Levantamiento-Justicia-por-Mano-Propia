@@ -199,13 +199,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
     <div style="width:1px;height:28px;background:rgba(0,40,85,.15);flex-shrink:0;"></div>
     <div class="tb-name">OSCC — Barranquilla 2026
-      <span>Fichas de Levantamiento · Problemas Públicos · Barrio Rebolo</span>
+      <span>Fichas de Levantamiento · Problemas Públicos · Barrio Rebolo / Gran Bazar</span>
     </div>
   </div>
   <div class="tb-pills">
     <span class="pill pill-red">Problema Territorial Convivencia PTC N° 3</span>
     <span class="pill pill-gold">Justicia por Mano Propia</span>
-    <span class="pill pill-orange">Barrio Rebolo</span>
+    <span class="pill pill-orange">Rebolo · Gran Bazar</span>
   </div>
 </div>
 
@@ -213,15 +213,15 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
   <div class="hero-inner">
-    <div class="prob-badge">Problema Público Priorizado · Diagnóstico Territorial · Rebolo</div>
+    <div class="prob-badge">Problema Público Priorizado · Diagnóstico Territorial · Rebolo / Gran Bazar</div>
     <h1>Ficha de Levantamiento:<br><em>Justicia por</em><br>Mano Propia</h1>
     <div class="prob-text">
-      <strong>Problema Territorial Convivencia PTC N° 3:</strong> Aumento de expresiones sociales que dan cuenta del interés de ciertas comunidades de ejercer justicia por mano propia ante los hechos de delincuencia que los afectan. Esta situación refleja una <strong>pérdida de confianza institucional</strong> y una tendencia creciente a la resolución violenta de conflictos en el barrio Rebolo.
+      <strong>Problema Territorial Convivencia PTC N° 3:</strong> Aumento de expresiones sociales que dan cuenta del interés de ciertas comunidades de ejercer justicia por mano propia ante los hechos de delincuencia que los afectan. Esta situación refleja una <strong>pérdida de confianza institucional</strong> y una tendencia creciente a la resolución violenta de conflictos en los barrios Rebolo y Gran Bazar.
     </div>
     <div class="zones-row">
-      <div class="zone-chip"><div class="dot dot-red"></div> Barrio Rebolo</div>
-      <div class="zone-chip"><div class="dot dot-orange"></div> Espacios de participación ciudadana</div>
-      <div class="zone-chip"><div class="dot dot-gold"></div> 5 manifestaciones a verificar</div>
+      <div class="zone-chip"><div class="dot dot-red"></div> Barrio Rebolo · Suroriente</div>
+      <div class="zone-chip"><div class="dot dot-gold"></div> Barrio Gran Bazar · Norte-Centro Histórico</div>
+      <div class="zone-chip"><div class="dot dot-orange"></div> 5 manifestaciones a verificar</div>
       <div class="zone-chip"><div class="dot dot-red"></div> Levantamiento en campo</div>
     </div>
     <div class="stats-row">
@@ -277,20 +277,18 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
         <div class="fld-row">
           <div class="fld">
-            <label class="lbl">Localidad / UPZ <span class="req">✱</span></label>
-            <select id="localidad" onchange="generarCodigo()">
-              <option value="">— Seleccione —</option>
-              <option value="RBL" selected>Rebolo</option>
-              <option value="SUR">Suroriente</option>
-              <option value="RIO">Franja del Río</option>
-              <option value="OTR">Otra</option>
+            <label class="lbl">Barrio / Sector específico <span class="req">✱</span></label>
+            <select id="barrio" onchange="actualizarLocalidad()">
+              <option value="">— Seleccione barrio —</option>
+              <option value="Rebolo">Rebolo</option>
+              <option value="Gran Bazar">Gran Bazar</option>
             </select>
-            <div class="val-msg" id="vm-loc">La localidad es obligatoria.</div>
+            <div class="val-msg" id="vm-barrio">El barrio es obligatorio.</div>
           </div>
           <div class="fld">
-            <label class="lbl">Barrio / Sector específico <span class="req">✱</span></label>
-            <input type="text" id="barrio" placeholder="Ej. Rebolo, sector norte" value="Rebolo">
-            <div class="val-msg" id="vm-barrio">El barrio es obligatorio.</div>
+            <label class="lbl">Localidad <span class="req">✱</span></label>
+            <input type="text" id="localidad" placeholder="Se actualiza según el barrio" readonly style="background:var(--brd2);color:var(--ink3);">
+            <div class="val-msg" id="vm-loc">La localidad es obligatoria.</div>
           </div>
         </div>
 
@@ -335,7 +333,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         <div><div class="c-sub">Sección 2 de 5</div><div class="c-title">Contexto Territorial del Sector</div></div>
       </div>
       <div class="card-body">
-        <div class="ib gold"><span class="ii">ℹ️</span><p>Describa el contexto territorial del sector específico de Rebolo donde se realiza el levantamiento. Esta información es fundamental para interpretar las manifestaciones del problema.</p></div>
+        <div class="ib gold"><span class="ii">ℹ️</span><p>Describa el contexto territorial del sector específico donde se realiza el levantamiento (Rebolo o Gran Bazar). Esta información es fundamental para interpretar las manifestaciones del problema.</p></div>
 
         <div class="fld">
           <label class="lbl">Descripción general del sector <span class="req">✱</span> <span class="hint">(máx. 600 car.)</span></label>
@@ -793,6 +791,27 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 </div>
 
 <script>
+// Función para actualizar la localidad según el barrio seleccionado
+function actualizarLocalidad() {
+    const barrioSelect = document.getElementById('barrio');
+    const localidadInput = document.getElementById('localidad');
+    const barrio = barrioSelect.value;
+    
+    if (barrio === 'Rebolo') {
+        localidadInput.value = 'Suroriente';
+    } else if (barrio === 'Gran Bazar') {
+        localidadInput.value = 'Norte-Centro Histórico';
+    } else {
+        localidadInput.value = '';
+    }
+}
+
+// Asignar el evento change al select de barrio
+document.getElementById('barrio').addEventListener('change', function() {
+    actualizarLocalidad();
+    generarCodigo(); // Actualizar código también
+});
+
 let cur = 0;
 const total = 5;
 
@@ -819,7 +838,7 @@ function anterior(n) { goTo(n - 1); }
 function validar(n) {
   let ok = true;
   if (n === 0) {
-    [['fecha','vm-fecha'],['localidad','vm-loc'],['barrio','vm-barrio'],['resp','vm-resp']].forEach(([id,vm]) => {
+    [['fecha','vm-fecha'],['barrio','vm-barrio'],['localidad','vm-loc'],['resp','vm-resp']].forEach(([id,vm]) => {
       const el = document.getElementById(id);
       const v = document.getElementById(vm);
       if (!el.value.trim()) { el.style.borderColor = 'var(--accent)'; v.classList.add('vis'); ok = false; }
@@ -842,11 +861,19 @@ function validar(n) {
 }
 
 function generarCodigo() {
+  const barrio = document.getElementById('barrio').value;
   const loc = document.getElementById('localidad').value;
   const f = (document.getElementById('fecha').value || '').replace(/-/g,'');
+  let prefix = 'PTC3';
+  if (barrio === 'Rebolo') prefix += '-RBL';
+  else if (barrio === 'Gran Bazar') prefix += '-GBZ';
+  else prefix += '-XXX';
+  
   if (loc && f) {
     const n = String(Math.floor(Math.random() * 900) + 100);
-    document.getElementById('codigo').value = 'PTC3-' + loc + '-' + f + '-' + n;
+    document.getElementById('codigo').value = prefix + '-' + f + '-' + n;
+  } else {
+    document.getElementById('codigo').value = prefix + '-XXXXXX-XXX';
   }
 }
 document.getElementById('fecha').addEventListener('change', generarCodigo);
