@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ficha PTC3 · Justicia por Mano Propia · GESEG</title>
+<title>Ficha PTC3 · Justicia por Mano Propia · OSCC</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,300&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -193,7 +193,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div class="tb-brand">
     <div style="background:#fff;border-radius:7px;padding:6px 14px;display:flex;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,.12);">
       <div style="display:flex;flex-direction:column;align-items:center;line-height:1.2;">
-        <span style="font-weight:800;font-size:1.2em;color:#002855;letter-spacing:.05em;">GESEG</span>
+        <span style="font-weight:800;font-size:1.2em;color:#002855;letter-spacing:.05em;">OSCC</span>
         <span style="font-size:.55em;font-weight:600;color:var(--steel);letter-spacing:.03em;">Gestión de la Seguridad S.A.S.</span>
       </div>
     </div>
@@ -261,7 +261,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         <div><div class="c-sub">Sección 1 de 5</div><div class="c-title">Identificación del Levantamiento</div></div>
       </div>
       <div class="card-body">
-        <div class="ib red"><span class="ii">⚠️</span><p><strong>Información confidencial.</strong> Esta ficha contiene datos sensibles sobre dinámicas de conflictividad social. Su manejo es de uso institucional exclusivo — OSCC / GESEG.</p></div>
+        <div class="ib red"><span class="ii">⚠️</span><p><strong>Información confidencial.</strong> Esta ficha contiene datos sensibles sobre dinámicas de conflictividad social. Su manejo es de uso institucional exclusivo — OSCC.</p></div>
 
         <div class="fld-row">
           <div class="fld">
@@ -691,7 +691,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         <div class="ib red"><span class="ii">📷</span><p><strong>No fotografíe personas.</strong> Solo se fotografían espacios, infraestructura, panfletos y contexto territorial. Las fotografías son contextuales — no deben contener información que identifique individuos.</p></div>
         <div class="photo-zone" onclick="document.getElementById('fotos-input').click()">
           <div style="font-size:2em">📸</div>
-          <p><strong>Toque para adjuntar fotografías del contexto territorial</strong><br>Formato JPG/PNG · Máximo 8 fotos · Sin personas identificables</p>
+          <p><strong>Toque para adjuntar fotografías</strong><br>JPG/PNG · Hasta 20 fotos · Sin personas identificables</p>
           <input type="file" id="fotos-input" accept="image/*" multiple onchange="prevFotos(event)" style="display:none;">
         </div>
         <div class="photo-preview" id="prev"></div>
@@ -781,7 +781,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
 <div class="footer">
   <div>
-    <b>GESEG</b> · Ficha de Levantamiento PTC3 · OSCC Barranquilla 2026<br>
+    <b>OSCC</b> · Ficha de Levantamiento PTC3 · OSCC Barranquilla 2026<br>
     <span class="fcred">
       Autoría: Omar Rubiano Castro · CONVIVE 360 · Alcaldía Local de Barranquilla<br>
       Fuente: SIEDCO-Policía Nacional · Área Metropolitana de Barranquilla
@@ -976,6 +976,7 @@ function recolectarDatosFormulario() {
   });
 
   obj.pp = PP_NUMERO;
+  obj.fotos_base64 = fotosBase64;
   obj.timestamp_envio = new Date().toISOString();
   return obj;
 }
@@ -1009,6 +1010,131 @@ function enviar() {
 function nuevaFicha() {
   location.reload();
 }
+
+/* ═══ MÓDULO DE FOTOS — OSCC ═══
+   Comprime y prepara fotos para subir a Google Drive via Apps Script
+   Soporta hasta 20 fotos por ficha */
+const MAX_FOTOS = 20;
+const MAX_PX = 1200;   // Redimensionar a máximo 1200px de lado largo
+const CALIDAD = 0.7;   // Calidad JPEG (0.7 = buena calidad, tamaño razonable)
+let fotosBase64 = [];   // Almacén global de fotos comprimidas
+
+function initPhotoZones() {
+  document.querySelectorAll('.photo-zone').forEach(zone => {
+    const input = zone.parentElement.querySelector('input[type="file"]') ||
+                  zone.previousElementSibling;
+    if (input && input.type === 'file') {
+      zone.addEventListener('click', () => input.click());
+      input.addEventListener('change', (e) => procesarFotos(e, zone));
+    }
+  });
+}
+
+async function procesarFotos(e, zone) {
+  const preview = zone.querySelector('.photo-preview') || 
+                  zone.nextElementSibling?.classList?.contains('photo-preview') ? zone.nextElementSibling : null ||
+                  document.getElementById('prev') ||
+                  document.getElementById('photoPreview1');
+  
+  if (!preview) return;
+  
+  const archivos = Array.from(e.target.files);
+  const espacioDisponible = MAX_FOTOS - fotosBase64.length;
+  
+  if (espacioDisponible <= 0) {
+    mostrarToast('⚠ Máximo ' + MAX_FOTOS + ' fotos alcanzado.', 'err');
+    return;
+  }
+  
+  const lote = archivos.slice(0, espacioDisponible);
+  
+  for (const archivo of lote) {
+    try {
+      const comprimida = await comprimirImagen(archivo);
+      fotosBase64.push(comprimida);
+      
+      // Crear thumbnail
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb-wrap';
+      thumb.style.cssText = 'position:relative;display:inline-block;';
+      
+      const img = document.createElement('img');
+      img.src = comprimida;
+      img.className = 'photo-thumb';
+      thumb.appendChild(img);
+      
+      // Botón eliminar
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = '✕';
+      del.style.cssText = 'position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;background:#C0392B;color:#fff;border:none;font-size:.65em;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.3);';
+      del.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const idx = fotosBase64.indexOf(comprimida);
+        if (idx > -1) fotosBase64.splice(idx, 1);
+        thumb.remove();
+        actualizarContadorFotos(zone);
+      });
+      thumb.appendChild(del);
+      
+      preview.appendChild(thumb);
+    } catch (err) {
+      console.warn('Error procesando foto:', err);
+    }
+  }
+  
+  actualizarContadorFotos(zone);
+  
+  if (archivos.length > espacioDisponible) {
+    mostrarToast('⚠ Se agregaron ' + lote.length + ' de ' + archivos.length + ' fotos (máx. ' + MAX_FOTOS + ').', 'err');
+  }
+}
+
+function actualizarContadorFotos(zone) {
+  let counter = zone.querySelector('.foto-counter');
+  if (!counter) {
+    counter = document.createElement('div');
+    counter.className = 'foto-counter';
+    counter.style.cssText = 'margin-top:8px;font-size:.78em;font-weight:600;color:var(--steel,#0057A8);';
+    zone.appendChild(counter);
+  }
+  counter.textContent = '📷 ' + fotosBase64.length + ' / ' + MAX_FOTOS + ' fotos';
+  counter.style.color = fotosBase64.length >= MAX_FOTOS ? 'var(--accent,#D6534A)' : 'var(--steel,#0057A8)';
+}
+
+function comprimirImagen(archivo) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        
+        // Redimensionar manteniendo proporción
+        if (w > MAX_PX || h > MAX_PX) {
+          if (w > h) { h = Math.round(h * MAX_PX / w); w = MAX_PX; }
+          else { w = Math.round(w * MAX_PX / h); h = MAX_PX; }
+        }
+        
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        
+        resolve(canvas.toDataURL('image/jpeg', CALIDAD));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(archivo);
+  });
+}
+
+// Inicializar zonas de fotos
+document.addEventListener('DOMContentLoaded', () => { initPhotoZones(); });
+
 </script>
 </body>
 </html>
